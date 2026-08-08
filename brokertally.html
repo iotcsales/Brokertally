@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Brokertally — Brokerage & Deal Profitability Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink900:#151B22; --ink700:#212B35; --ink600:#2E3D4A;
+    --paper:#EEF1F4; --paper-line:#CBD4DC; --paper-line2:#DDE4EA;
+    --steel:#6B8CAE; --text-light:#E5EAEE; --muted:#A8B8C4;
+    --green:#3F6B4E; --amber:#8A6A2A; --red:#8B3A3A;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; min-height:100vh; background:linear-gradient(180deg,var(--ink900) 0%, var(--ink700) 100%); font-family:'Source Serif 4', Georgia, serif; color:var(--text-light);}
+  .wrap{max-width:640px; margin:0 auto;}
+  .hero{padding:40px 24px 24px; border-bottom:1px solid var(--ink600);}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.25em; color:var(--steel); margin-bottom:10px;}
+  h1{
+    font-family:'Fraunces',Georgia,serif; font-size:36px; font-weight:700; margin:0; letter-spacing:-0.01em;
+    background: radial-gradient(ellipse 60% 45% at 28% 15%, rgba(255,255,255,1), transparent 60%), linear-gradient(180deg, #FFFFFF 0%, #E8EEF3 35%, #B8C9D8 65%, #7E97AC 100%);
+    background-blend-mode: overlay, normal;
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent;
+    filter: drop-shadow(0 0 1px rgba(255,255,255,1)) drop-shadow(0 0 6px rgba(180,200,220,0.55)) drop-shadow(0 2px 3px rgba(0,0,0,0.45));
+  }
+  .subtitle{font-family:'IBM Plex Mono',monospace; font-size:12px; letter-spacing:0.15em; color:var(--muted); margin:6px 0 0 0; text-transform:uppercase;}
+  .punchline{font-family:'Fraunces',Georgia,serif; font-style:italic; font-size:18px; color:#B8C9D8; margin:10px 0 0 0;}
+  .tagline{margin-top:14px; font-size:14px; line-height:1.6; color:#DCE4EA; max-width:480px;}
+  .section{padding:24px;}
+  .card{
+    background:linear-gradient(180deg, #F8FAFB 0%, var(--paper) 100%); color:#1A232B; border-radius:5px; padding:16px;
+    border:1px solid #A9BECF; margin-bottom:12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .keyrow{display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;}
+  .label{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.2em; color:#4E6478;}
+  input[type=number], input[type=text]{
+    width:100%; background:transparent; border:none; outline:none; font-family:'IBM Plex Mono',monospace;
+    font-size:15px; color:#1A232B; padding:8px 0;
+    text-overflow:ellipsis; overflow:hidden; white-space:nowrap; max-width:100%;
+  }
+  input::placeholder{color:#8398A8;}
+  .fielderr{font-size:11.5px; color:#8B3A3A; margin-top:4px; display:none;}
+  .fielderr.show{display:block;}
+  .toggle{display:flex; gap:8px; margin-top:6px; flex-wrap:wrap;}
+  .toggle button{flex:1; min-width:90px; padding:10px; border:1px solid var(--paper-line); background:transparent; border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.03em; color:#4E6478; cursor:pointer;}
+  .toggle button.active{
+    background:linear-gradient(180deg, #A9C2D8 0%, #6B8CAE 45%, #3F5A72 100%); color:#fff; border-color:#2A3D4E; font-weight:600;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 2px 6px rgba(0,0,0,0.3); text-shadow:0 1px 0 rgba(0,0,0,0.15);
+  }
+  h3.grouplabel{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--steel); margin:20px 0 10px 0; text-transform:uppercase; display:flex; align-items:center; gap:8px;}
+  h3.grouplabel .modebadge{font-size:9px; padding:2px 6px; border:1px solid var(--steel); border-radius:3px; color:var(--steel);}
+  .note{font-size:11.5px; color:#8398A8; margin-top:4px; line-height:1.5;}
+  .modetoggle{display:flex; gap:8px; margin-bottom:20px;}
+  .modetoggle button{flex:1; padding:11px; border:1px solid var(--ink600); background:var(--ink700); border-radius:5px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; letter-spacing:0.05em; color:var(--muted); cursor:pointer;}
+  .modetoggle button.active{
+    background:linear-gradient(180deg, #A9C2D8 0%, #6B8CAE 45%, #3F5A72 100%); color:#fff; border-color:#2A3D4E; font-weight:600;
+  }
+  .advonly{display:none;}
+  .advonly.show{display:block;}
+  .runbtn{
+    margin-top:8px; width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:14px; border:1px solid #2A3D4E; border-radius:5px;
+    background:linear-gradient(180deg, #A9C2D8 0%, #6B8CAE 45%, #3F5A72 100%); color:#fff;
+    font-family:'IBM Plex Mono',monospace; font-size:13px; letter-spacing:0.15em; cursor:pointer; font-weight:600;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 4px rgba(0,0,0,0.15), 0 3px 8px rgba(0,0,0,0.3);
+    text-shadow:0 1px 0 rgba(0,0,0,0.15);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+  }
+  .runbtn:active{ transform:translateY(2px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), inset 0 2px 5px rgba(0,0,0,0.25); }
+  .resultbox{
+    background:linear-gradient(180deg, #F8FAFB 0%, var(--paper) 100%); color:#1A232B; border-radius:5px; padding:20px; margin-top:20px;
+    border:1px solid #A9BECF; box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 8px 24px rgba(0,0,0,0.22);
+  }
+  .resultrow{display:flex; justify-content:space-between; align-items:baseline; padding:10px 0; border-top:1px solid var(--paper-line2);}
+  .resultrow:first-child{border-top:none;}
+  .resultrow .rlabel{font-size:14px; color:#3A4B58;}
+  .resultrow .rval{font-family:'IBM Plex Mono',monospace; font-size:15px; font-weight:600; color:#1A232B;}
+  .resultgrouphead{font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:0.15em; color:#6B8398; text-transform:uppercase; padding-top:14px; margin-top:4px; border-top:1px solid var(--paper-line); }
+  .resultgrouphead:first-child{border-top:none; padding-top:0; margin-top:0;}
+  .totalrow{
+    background:linear-gradient(180deg, #DCE8F0 0%, #C5D9E5 100%);
+    margin:14px -20px 0; padding:20px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6), inset 0 -1px 0 rgba(63,90,114,0.3);
+  }
+  .totalrow.last{border-radius:0 0 5px 5px; margin-bottom:-20px;}
+  .totalrow .rlabel{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.1em; color:#2A4258; text-transform:uppercase;}
+  .totalrow .rval{font-family:'Fraunces',Georgia,serif; font-size:26px; font-weight:700; color:#1A232B;}
+  .explainbox{background:#E4ECF2; border-radius:4px; padding:14px 16px; margin-top:12px; font-size:12.5px; line-height:1.7; color:#2A3D4E;}
+  .explainbox strong{color:#1A232B;}
+  .exportrow{display:flex; gap:8px; margin-top:14px; flex-wrap:wrap;}
+  .exportbtn{
+    flex:1; min-width:100px; padding:11px; border:1px solid var(--steel); border-radius:5px; background:transparent; color:var(--steel);
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.06em; cursor:pointer;
+  }
+  @media print{
+    body{background:#fff !important; color:#000 !important;}
+    .hero, .card, .runbtn, .exportrow, .modetoggle, .toggle, .footer, select, input, .historysection{display:none !important;}
+    .resultbox{display:block !important; box-shadow:none !important; border:1px solid #999 !important; background:#fff !important; color:#000 !important;}
+    .print-header, .print-date{display:block !important; color:#000 !important; font-family:Georgia,serif;}
+  }
+  .print-header, .print-date{display:none;}
+  .print-header{font-size:22px; font-weight:700; margin-bottom:4px;}
+  .print-date{font-family:'IBM Plex Mono',monospace; font-size:11px; color:#555; margin-bottom:16px;}
+  .historysection{margin-top:32px; padding-top:24px; border-top:1px solid var(--ink600);}
+  .historyitem{background:var(--ink700); border:1px solid var(--ink600); border-radius:5px; padding:12px 14px; margin-bottom:8px; font-size:12.5px; color:var(--text-light);}
+  .historyitem .hrow{display:flex; justify-content:space-between; align-items:flex-start; gap:10px;}
+  .historyitem .hdel{color:#C0605A; cursor:pointer; font-family:'IBM Plex Mono',monospace; font-weight:700; flex-shrink:0;}
+  .historyitem .hexport{display:flex; gap:6px; margin-top:8px;}
+  .historyitem .hexportbtn{font-size:10px; padding:6px 8px; border:1px solid var(--steel); border-radius:3px; background:transparent; color:var(--steel); cursor:pointer; font-family:'IBM Plex Mono',monospace;}
+  .warnbox{background:#1A222A; border:1px solid #2E4050; border-radius:3px; padding:16px; margin-top:16px; font-size:12.5px; line-height:1.6; color:#C0D0DC;}
+  .footer{text-align:center; padding:32px 24px 40px; font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--muted); border-top:1px solid var(--ink600); margin-top:16px;}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div style="display:flex; justify-content:center; margin-bottom:16px;">
+      <svg width="52" height="52" viewBox="0 0 52 52">
+        <defs>
+          <linearGradient id="steelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#D6E4EE"/>
+            <stop offset="50%" stop-color="#6B8CAE"/>
+            <stop offset="100%" stop-color="#3F5A72"/>
+          </linearGradient>
+        </defs>
+        <circle cx="26" cy="26" r="24" fill="none" stroke="url(#steelGrad)" stroke-width="2.5"/>
+        <circle cx="26" cy="26" r="19" fill="none" stroke="url(#steelGrad)" stroke-width="1"/>
+        <path d="M16 32 L22 24 L28 28 L36 17" fill="none" stroke="url(#steelGrad)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="36" cy="17" r="2.5" fill="url(#steelGrad)"/>
+      </svg>
+    </div>
+    <div class="eyebrow">BROKERAGE & DEAL PROFITABILITY INTELLIGENCE · BY TEAM IOTC</div>
+    <h1>Brokertally</h1>
+    <p class="subtitle">Commission, GST, TDS & Take-Home Calculator</p>
+    <p class="punchline">Know What You'll Actually Take Home.</p>
+    <p class="tagline">Calculate brokerage, understand your tax assumptions, track deal expenses, and see your estimated net profit on every deal — for India's real estate agents and brokers.</p>
+  </div>
+
+  <div class="section">
+    <div class="modetoggle">
+      <button id="modeBasicBtn" class="active">BASIC MODE</button>
+      <button id="modeAdvancedBtn">ADVANCED MODE</button>
+    </div>
+
+    <div class="card">
+      <div class="keyrow"><span class="label">DEAL / PROPERTY NAME (OPTIONAL)</span></div>
+      <input type="text" id="dealName" placeholder="e.g. Whitefield 3BHK — Sharma" />
+    </div>
+
+    <div class="card">
+      <div class="keyrow"><span class="label">TRANSACTION TYPE</span></div>
+      <div class="toggle">
+        <button id="typeSaleBtn" class="active">Sale</button>
+        <button id="typeRentalBtn">Rental</button>
+      </div>
+    </div>
+
+    <div id="fieldsSale">
+      <div class="card">
+        <div class="keyrow"><span class="label">PROPERTY VALUE (₹)</span></div>
+        <input type="number" id="propValue" placeholder="e.g. 8000000" min="0" />
+        <div class="fielderr" id="errPropValue">Please enter a valid property value.</div>
+      </div>
+      <div class="card">
+        <div class="keyrow"><span class="label">COMMISSION RATE (%)</span></div>
+        <input type="number" id="commRate" placeholder="e.g. 1.5" min="0" max="100" step="0.01" />
+        <div class="fielderr" id="errCommRate">Please enter a valid commission rate (0–100%).</div>
+        <p class="note">Typical market practice: ~1–2% of sale value, varies by city.</p>
+      </div>
+    </div>
+
+    <div id="fieldsRental" class="hidden">
+      <div class="card">
+        <div class="keyrow"><span class="label">MONTHLY RENT (₹)</span></div>
+        <input type="number" id="monthlyRentVal" placeholder="e.g. 30000" min="0" />
+        <div class="fielderr" id="errMonthlyRent">Please enter a valid monthly rent.</div>
+      </div>
+      <div class="card">
+        <div class="keyrow"><span class="label">COMMISSION (MONTHS OF RENT)</span></div>
+        <input type="number" id="rentMonths" placeholder="e.g. 1" min="0" step="0.5" />
+        <div class="fielderr" id="errRentMonths">Please enter a valid number of months.</div>
+        <p class="note">Typical market practice: one month's rent, varies by city and agreement.</p>
+      </div>
+    </div>
+
+    <h3 class="grouplabel">Brokerage Structure</h3>
+    <div class="card">
+      <div class="keyrow"><span class="label">WHO ARE YOU?</span></div>
+      <div class="toggle">
+        <button id="roleIndependentBtn" class="active">Independent</button>
+        <button id="roleAgencyBtn">Agency / Senior Broker</button>
+        <button id="roleCoBrokerBtn">Co-Broker</button>
+        <button id="roleReferralBtn">Referral Agent</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="keyrow"><span class="label">YOUR SHARE OF COMMISSION (%)</span></div>
+      <input type="number" id="splitPct" placeholder="e.g. 100" min="0" max="100" value="100" />
+      <div class="fielderr" id="errSplitPct">Please enter a valid share between 1 and 100%.</div>
+      <p class="note">If you're independent, use 100%. Otherwise, enter your agreed share of the total brokerage.</p>
+    </div>
+
+    <div class="advonly" id="advPayer">
+      <h3 class="grouplabel">Brokerage Paid By <span class="modebadge">ADVANCED</span></h3>
+      <div class="card">
+        <div class="toggle">
+          <button id="payerBuyerBtn" class="active">Buyer</button>
+          <button id="payerSellerBtn">Seller</button>
+          <button id="payerBothBtn">Both</button>
+          <button id="payerOtherBtn">Other</button>
+        </div>
+        <div class="hidden" id="payerBothFields" style="margin-top:12px;">
+          <div class="keyrow"><span class="label">BUYER SHARE (%)</span></div>
+          <input type="number" id="buyerSharePct" placeholder="e.g. 50" min="0" max="100" value="50" />
+        </div>
+      </div>
+    </div>
+
+    <h3 class="grouplabel">GST</h3>
+    <div class="card">
+      <div class="toggle">
+        <button id="gstApplicableBtn" class="active">Applicable</button>
+        <button id="gstNotApplicableBtn">Not Applicable / Confirm</button>
+      </div>
+      <div id="gstRateField" style="margin-top:12px;">
+        <div class="keyrow"><span class="label">GST RATE (%)</span></div>
+        <input type="number" id="gstRate" placeholder="18" min="0" max="100" value="18" />
+      </div>
+      <p class="note">GST treatment depends on your registration status, transaction circumstances, and applicable rules. This is an estimate, not a determination of your GST liability.</p>
+    </div>
+
+    <h3 class="grouplabel">TDS</h3>
+    <div class="card">
+      <div class="toggle">
+        <button id="tdsApplyBtn" class="active">Apply TDS</button>
+        <button id="tdsNoneBtn">No TDS / Not Applicable</button>
+      </div>
+      <div id="tdsRateField" style="margin-top:12px;">
+        <div class="keyrow"><span class="label">TDS RATE (%, SECTION 194H)</span></div>
+        <input type="number" id="tdsRate" placeholder="5" min="0" max="100" value="5" />
+      </div>
+      <p class="note">TDS treatment depends on the payer, recipient, transaction structure, and applicable tax rules. Confirm the current rate and applicability with a qualified tax professional.</p>
+    </div>
+
+    <div class="advonly" id="advExpenses">
+      <h3 class="grouplabel">Deal Expenses <span class="modebadge">ADVANCED</span></h3>
+      <div class="card">
+        <div class="keyrow"><span class="label">LEAD / MARKETING COST (₹)</span></div>
+        <input type="number" id="expLead" placeholder="0" min="0" />
+      </div>
+      <div class="card">
+        <div class="keyrow"><span class="label">TRAVEL / FUEL (₹)</span></div>
+        <input type="number" id="expTravel" placeholder="0" min="0" />
+      </div>
+      <div class="card">
+        <div class="keyrow"><span class="label">REFERRAL FEE (₹)</span></div>
+        <input type="number" id="expReferral" placeholder="0" min="0" />
+      </div>
+      <div class="card">
+        <div class="keyrow"><span class="label">OTHER EXPENSES (₹)</span></div>
+        <input type="number" id="expOther" placeholder="0" min="0" />
+      </div>
+    </div>
+
+    <button class="runbtn" id="calcBtn">CALCULATE DEAL</button>
+
+    <div class="resultbox hidden" id="resultBox"></div>
+    <div class="exportrow hidden" id="resultExportRow">
+      <button class="exportbtn" onclick="printResult()">🖨 PRINT / PDF</button>
+      <button class="exportbtn" onclick="downloadResult()">⬇ DOWNLOAD</button>
+      <button class="exportbtn" onclick="shareResult()">📤 SHARE</button>
+      <button class="exportbtn" onclick="saveToHistory(this)">💾 SAVE TO HISTORY</button>
+    </div>
+
+    <div class="warnbox">
+      <strong>Brokertally provides estimates for planning and calculation purposes only.</strong> Tax rates, GST applicability, TDS applicability, thresholds, and other regulatory requirements may change and may depend on your specific circumstances. Always verify current applicability before issuing an invoice or making a tax filing. Brokertally is not a substitute for professional tax, accounting, or legal advice.
+    </div>
+
+    <div class="historysection">
+      <h3 style="font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.15em; color:var(--steel); text-transform:uppercase; margin-bottom:12px;">SAVED HISTORY</h3>
+      <div id="historyList"></div>
+      <button class="runbtn" id="clearHistoryBtn" style="background:transparent; color:#C0605A; border:1px solid #C0605A; box-shadow:none; text-shadow:none; margin-top:8px;">CLEAR ALL HISTORY</button>
+    </div>
+  </div>
+
+  <div class="footer">BUILT BY TEAM IOTC</div>
+
+</div>
+
+<script>
+/* ================= MODE TOGGLE ================= */
+let currentMode = 'basic';
+document.getElementById('modeBasicBtn').onclick = () => setMode('basic');
+document.getElementById('modeAdvancedBtn').onclick = () => setMode('advanced');
+function setMode(m){
+  currentMode = m;
+  document.getElementById('modeBasicBtn').classList.toggle('active', m === 'basic');
+  document.getElementById('modeAdvancedBtn').classList.toggle('active', m === 'advanced');
+  document.querySelectorAll('.advonly').forEach(el => el.classList.toggle('show', m === 'advanced'));
+}
+
+/* ================= TRANSACTION TYPE ================= */
+let transactionType = 'sale';
+document.getElementById('typeSaleBtn').onclick = () => setType('sale');
+document.getElementById('typeRentalBtn').onclick = () => setType('rental');
+function setType(t){
+  transactionType = t;
+  document.getElementById('typeSaleBtn').classList.toggle('active', t === 'sale');
+  document.getElementById('typeRentalBtn').classList.toggle('active', t === 'rental');
+  document.getElementById('fieldsSale').classList.toggle('hidden', t !== 'sale');
+  document.getElementById('fieldsRental').classList.toggle('hidden', t !== 'rental');
+  document.getElementById('resultBox').classList.add('hidden');
+  document.getElementById('resultExportRow').classList.add('hidden');
+}
+
+/* ================= BROKERAGE ROLE (informational — affects default share hint) ================= */
+const roleBtns = { independent:'roleIndependentBtn', agency:'roleAgencyBtn', cobroker:'roleCoBrokerBtn', referral:'roleReferralBtn' };
+let brokerRole = 'independent';
+Object.keys(roleBtns).forEach(r => {
+  document.getElementById(roleBtns[r]).onclick = () => {
+    brokerRole = r;
+    Object.keys(roleBtns).forEach(k => document.getElementById(roleBtns[k]).classList.toggle('active', k === r));
+    const splitInput = document.getElementById('splitPct');
+    if(r === 'independent' && !splitInput.dataset.userEdited){ splitInput.value = 100; }
+  };
+});
+document.getElementById('splitPct').addEventListener('input', function(){ this.dataset.userEdited = 'true'; });
+
+/* ================= BROKERAGE PAYER (advanced) ================= */
+const payerBtns = { buyer:'payerBuyerBtn', seller:'payerSellerBtn', both:'payerBothBtn', other:'payerOtherBtn' };
+let brokeragePayer = 'buyer';
+Object.keys(payerBtns).forEach(p => {
+  document.getElementById(payerBtns[p]).onclick = () => {
+    brokeragePayer = p;
+    Object.keys(payerBtns).forEach(k => document.getElementById(payerBtns[k]).classList.toggle('active', k === p));
+    document.getElementById('payerBothFields').classList.toggle('hidden', p !== 'both');
+  };
+});
+
+/* ================= GST TOGGLE ================= */
+let gstApplicable = true;
+document.getElementById('gstApplicableBtn').onclick = () => setGst(true);
+document.getElementById('gstNotApplicableBtn').onclick = () => setGst(false);
+function setGst(v){
+  gstApplicable = v;
+  document.getElementById('gstApplicableBtn').classList.toggle('active', v);
+  document.getElementById('gstNotApplicableBtn').classList.toggle('active', !v);
+  document.getElementById('gstRateField').classList.toggle('hidden', !v);
+}
+
+/* ================= TDS TOGGLE ================= */
+let tdsApplicable = true;
+document.getElementById('tdsApplyBtn').onclick = () => setTds(true);
+document.getElementById('tdsNoneBtn').onclick = () => setTds(false);
+function setTds(v){
+  tdsApplicable = v;
+  document.getElementById('tdsApplyBtn').classList.toggle('active', v);
+  document.getElementById('tdsNoneBtn').classList.toggle('active', !v);
+  document.getElementById('tdsRateField').classList.toggle('hidden', !v);
+}
+
+/* ================= VALIDATION HELPERS ================= */
+function showFieldError(id, show){
+  const el = document.getElementById(id);
+  if(el) el.classList.toggle('show', show);
+}
+function isValidNumber(v, min, max){
+  if(v === '' || v === null || v === undefined) return false;
+  const n = parseFloat(v);
+  if(!isFinite(n) || isNaN(n)) return false;
+  if(min !== undefined && n < min) return false;
+  if(max !== undefined && n > max) return false;
+  return true;
+}
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+/* ================= CALCULATION ENGINE (pure function, no DOM dependency) ================= */
+function calculateDeal(inputs){
+  const {
+    transactionType, propertyValue, commissionRate, monthlyRent, commissionMonths,
+    yourSharePct, gstApplicable, gstRate, tdsApplicable, tdsRate,
+    expenses
+  } = inputs;
+
+  let grossCommission = 0;
+  if(transactionType === 'sale'){
+    grossCommission = propertyValue * (commissionRate / 100);
+  } else {
+    grossCommission = monthlyRent * commissionMonths;
+  }
+
+  const yourShare = grossCommission * (yourSharePct / 100);
+  const gstAmount = gstApplicable ? yourShare * (gstRate / 100) : 0;
+  const invoiceTotal = yourShare + gstAmount;
+  const tdsAmount = tdsApplicable ? yourShare * (tdsRate / 100) : 0;
+  const cashReceived = invoiceTotal - tdsAmount;
+
+  const totalExpenses = (expenses.lead||0) + (expenses.travel||0) + (expenses.referral||0) + (expenses.other||0);
+  const netDealProfit = yourShare - totalExpenses;
+
+  return {
+    transactionType, grossCommission, yourShare,
+    gstApplicable, gstRate, gstAmount, invoiceTotal,
+    tdsApplicable, tdsRate, tdsAmount,
+    cashReceived, totalExpenses, netDealProfit
+  };
+}
+
+function fmt(num){
+  const sign = num < 0 ? '-' : '';
+  return sign + '₹' + Math.round(Math.abs(num)).toLocaleString('en-IN');
+}
+function row(label, val){
+  return '<div class="resultrow"><span class="rlabel">' + label + '</span><span class="rval">' + val + '</span></div>';
+}
+function groupHead(label){
+  return '<div class="resultgrouphead">' + label + '</div>';
+}
+
+/* ================= MAIN CALCULATE HANDLER ================= */
+document.getElementById('calcBtn').onclick = () => {
+  let valid = true;
+  ['errPropValue','errCommRate','errMonthlyRent','errRentMonths','errSplitPct'].forEach(id => showFieldError(id, false));
+
+  let propValue, commRate, monthlyRentVal, rentMonths;
+  if(transactionType === 'sale'){
+    propValue = parseFloat(document.getElementById('propValue').value);
+    commRate = parseFloat(document.getElementById('commRate').value);
+    if(!isValidNumber(propValue, 0)){ showFieldError('errPropValue', true); valid = false; }
+    if(!isValidNumber(commRate, 0, 100)){ showFieldError('errCommRate', true); valid = false; }
+  } else {
+    monthlyRentVal = parseFloat(document.getElementById('monthlyRentVal').value);
+    rentMonths = parseFloat(document.getElementById('rentMonths').value);
+    if(!isValidNumber(monthlyRentVal, 0)){ showFieldError('errMonthlyRent', true); valid = false; }
+    if(!isValidNumber(rentMonths, 0)){ showFieldError('errRentMonths', true); valid = false; }
+  }
+
+  const splitPct = parseFloat(document.getElementById('splitPct').value);
+  if(!isValidNumber(splitPct, 1, 100)){ showFieldError('errSplitPct', true); valid = false; }
+
+  if(!valid) return;
+
+  const gstRateVal = gstApplicable ? (parseFloat(document.getElementById('gstRate').value) || 0) : 0;
+  const tdsRateVal = tdsApplicable ? (parseFloat(document.getElementById('tdsRate').value) || 0) : 0;
+
+  const expenses = {
+    lead: parseFloat(document.getElementById('expLead').value) || 0,
+    travel: parseFloat(document.getElementById('expTravel').value) || 0,
+    referral: parseFloat(document.getElementById('expReferral').value) || 0,
+    other: parseFloat(document.getElementById('expOther').value) || 0
+  };
+
+  const result = calculateDeal({
+    transactionType, propertyValue: propValue, commissionRate: commRate,
+    monthlyRent: monthlyRentVal, commissionMonths: rentMonths,
+    yourSharePct: splitPct, gstApplicable, gstRate: gstRateVal,
+    tdsApplicable, tdsRate: tdsRateVal, expenses
+  });
+
+  renderResult(result);
+};
+
+function renderResult(r){
+  const basisLabel = r.transactionType === 'sale'
+    ? 'Gross Brokerage (' + document.getElementById('commRate').value + '% of ' + fmt(parseFloat(document.getElementById('propValue').value)) + ')'
+    : 'Gross Brokerage (' + document.getElementById('rentMonths').value + ' month(s) of ' + fmt(parseFloat(document.getElementById('monthlyRentVal').value)) + ')';
+
+  let html = groupHead('RESULT');
+  html += row(basisLabel, fmt(r.grossCommission));
+  html += row('Your Brokerage Share', fmt(r.yourShare));
+
+  if(r.gstApplicable || r.tdsApplicable){
+    html += groupHead('TAX / ADJUSTMENTS');
+    if(r.gstApplicable){
+      html += row('GST (' + r.gstRate + '%)', fmt(r.gstAmount));
+      html += row('Invoice Total', fmt(r.invoiceTotal));
+    }
+    if(r.tdsApplicable){
+      html += row('TDS (' + r.tdsRate + '%, u/s 194H)', '−' + fmt(r.tdsAmount));
+    }
+  }
+
+  html += '<div class="totalrow' + (r.totalExpenses === 0 ? ' last' : '') + '"><div class="rlabel">EXPECTED CASH RECEIPT</div><div class="rval">' + fmt(r.cashReceived) + '</div></div>';
+
+  if(r.totalExpenses > 0){
+    html += groupHead('DEAL EXPENSES');
+    html += row('Total Deal Expenses', '−' + fmt(r.totalExpenses));
+    html += '<div class="totalrow last"><div class="rlabel">ESTIMATED NET DEAL PROFIT</div><div class="rval">' + fmt(r.netDealProfit) + '</div></div>';
+  }
+
+  html += '<div class="explainbox">';
+  html += '<strong>New to GST and TDS? Here\'s what those numbers mean:</strong><br><br>';
+  if(r.gstApplicable){
+    html += '<strong>GST (' + fmt(r.gstAmount) + '):</strong> generally not your income, even though it lands in your account — it\'s collected on the government\'s behalf and accounted for under applicable GST rules. Your real earnings are your brokerage share, not brokerage + GST.<br><br>';
+  }
+  if(r.tdsApplicable){
+    html += '<strong>TDS (' + fmt(r.tdsAmount) + '):</strong> generally a tax credit rather than an additional expense, subject to applicable rules and your tax position — not necessarily a loss. It is typically credited against your tax liability when you file your return.<br><br>';
+  }
+  html += 'Confirm applicability with your CA or tax professional.';
+  html += '</div>';
+
+  document.getElementById('resultBox').innerHTML = html;
+  document.getElementById('resultBox').classList.remove('hidden');
+  document.getElementById('resultExportRow').classList.remove('hidden');
+  window.__lastDealResult = r;
+  document.getElementById('resultBox').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+/* ================= EXPORT, SHARE & HISTORY ================= */
+function buildDealSummaryText(r, dealName){
+  const lines = [
+    'BROKERTALLY — DEAL SUMMARY',
+    dealName ? ('Deal: ' + dealName) : null,
+    'Date: ' + new Date().toLocaleString(),
+    'Transaction: ' + (r.transactionType === 'sale' ? 'Sale' : 'Rental'),
+    '',
+    'Gross Brokerage: ' + fmt(r.grossCommission),
+    'Your Brokerage Share: ' + fmt(r.yourShare),
+  ];
+  if(r.gstApplicable){
+    lines.push('GST (' + r.gstRate + '%): ' + fmt(r.gstAmount));
+    lines.push('Invoice Total: ' + fmt(r.invoiceTotal));
+  }
+  if(r.tdsApplicable){
+    lines.push('TDS (' + r.tdsRate + '%): ' + fmt(r.tdsAmount));
+  }
+  lines.push('Expected Cash Receipt: ' + fmt(r.cashReceived));
+  if(r.totalExpenses > 0){
+    lines.push('Deal Expenses: ' + fmt(r.totalExpenses));
+    lines.push('Estimated Net Deal Profit: ' + fmt(r.netDealProfit));
+  }
+  lines.push('');
+  lines.push('Brokertally provides estimates for planning purposes only. Verify applicable GST/TDS rules with your CA before filing or invoicing.');
+  lines.push('Built by Team IOTC.');
+  return lines.filter(l => l !== null).join('\n');
+}
+
+function printResult(){
+  const el = document.getElementById('resultBox');
+  if(!el.querySelector('.print-header')){
+    const header = document.createElement('div');
+    header.className = 'print-header';
+    header.textContent = 'Brokertally — Deal Summary';
+    const dateEl = document.createElement('div');
+    dateEl.className = 'print-date';
+    dateEl.textContent = 'Generated ' + new Date().toLocaleDateString();
+    el.insertBefore(dateEl, el.firstChild);
+    el.insertBefore(header, el.firstChild);
+  }
+  window.print();
+}
+function downloadResult(){
+  if(!window.__lastDealResult) return;
+  const dealName = document.getElementById('dealName').value.trim();
+  const text = buildDealSummaryText(window.__lastDealResult, dealName);
+  const blob = new Blob([text], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'brokertally-deal-' + new Date().toISOString().slice(0,10) + '.txt';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+async function shareResult(){
+  if(!window.__lastDealResult) return;
+  const dealName = document.getElementById('dealName').value.trim();
+  const text = buildDealSummaryText(window.__lastDealResult, dealName);
+  if(navigator.share){
+    try { await navigator.share({ title: 'Brokertally — Deal Summary', text: text }); }
+    catch(e) { /* user cancelled */ }
+  } else {
+    window.location.href = 'mailto:?subject=' + encodeURIComponent('Brokertally — Deal Summary') + '&body=' + encodeURIComponent(text);
+  }
+}
+function saveToHistory(btn){
+  if(!window.__lastDealResult) return;
+  const r = window.__lastDealResult;
+  const dealName = document.getElementById('dealName').value.trim() || 'Untitled Deal';
+  const history = getHistorySafe();
+  history.unshift({
+    dealName, transactionType: r.transactionType, grossCommission: r.grossCommission,
+    yourShare: r.yourShare, gstAmount: r.gstAmount, tdsAmount: r.tdsAmount,
+    cashReceived: r.cashReceived, totalExpenses: r.totalExpenses, netDealProfit: r.netDealProfit,
+    fullText: buildDealSummaryText(r, dealName), date: new Date().toISOString()
+  });
+  localStorage.setItem('brokertally_history', JSON.stringify(history.slice(0, 200)));
+  if(btn){ btn.textContent = '✓ SAVED'; setTimeout(() => { btn.textContent = '💾 SAVE TO HISTORY'; }, 1500); }
+}
+
+function getHistorySafe(){
+  try {
+    const raw = localStorage.getItem('brokertally_history');
+    if(!raw) return [];
+    const parsed = JSON.parse(raw);
+    if(!Array.isArray(parsed)) return [];
+    return parsed.filter(item => item && typeof item === 'object' && item.fullText);
+  } catch(e) {
+    return [];
+  }
+}
+
+function renderHistory(){
+  const history = getHistorySafe();
+  const list = document.getElementById('historyList');
+  if(history.length === 0){
+    list.innerHTML = '<p style="font-size:12.5px; color:var(--muted);">No saved deals yet.</p>';
+    return;
+  }
+  list.innerHTML = history.map((item, i) => {
+    const dateStr = new Date(item.date).toLocaleString();
+    const safeName = escapeHtml(item.dealName || 'Untitled Deal');
+    const summary = 'Cash Receipt ' + fmt(item.cashReceived) + (item.netDealProfit !== undefined && item.totalExpenses > 0 ? ' · Net Profit ' + fmt(item.netDealProfit) : '');
+    return '<div class="historyitem"><div class="hrow"><div><strong>' + safeName + '</strong><br>' + dateStr + '<br>' + summary + '</div>' +
+      '<span class="hdel" onclick="deleteHistoryItem(' + i + ')">✕</span></div>' +
+      '<div class="hexport">' +
+      '<button class="hexportbtn" onclick="printHistoryItem(' + i + ')">Print</button>' +
+      '<button class="hexportbtn" onclick="downloadHistoryItem(' + i + ')">Download</button>' +
+      '<button class="hexportbtn" onclick="shareHistoryItem(' + i + ')">Share</button>' +
+      '</div></div>';
+  }).join('');
+}
+function downloadHistoryItem(i){
+  const history = getHistorySafe();
+  const item = history[i]; if(!item) return;
+  const blob = new Blob([item.fullText], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = 'brokertally-saved-' + item.date.slice(0,10) + '.txt';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+async function shareHistoryItem(i){
+  const history = getHistorySafe();
+  const item = history[i]; if(!item) return;
+  if(navigator.share){
+    try { await navigator.share({ title: 'Brokertally — ' + item.dealName, text: item.fullText }); }
+    catch(e) { /* user cancelled */ }
+  } else {
+    window.location.href = 'mailto:?subject=' + encodeURIComponent('Brokertally — ' + item.dealName) + '&body=' + encodeURIComponent(item.fullText);
+  }
+}
+function printHistoryItem(i){
+  const history = getHistorySafe();
+  const item = history[i]; if(!item) return;
+  let printArea = document.getElementById('historyPrintArea');
+  if(!printArea){
+    printArea = document.createElement('div');
+    printArea.id = 'historyPrintArea';
+    printArea.style.display = 'none';
+    document.body.appendChild(printArea);
+  }
+  printArea.innerHTML = '<div class="print-header" style="display:block;">Brokertally — ' + escapeHtml(item.dealName) + '</div>' +
+    '<div class="print-date" style="display:block;">Saved ' + new Date(item.date).toLocaleString() + '</div>' +
+    '<div style="white-space:pre-wrap; font-family:Georgia,serif;">' + item.fullText.replace(/</g,'&lt;') + '</div>';
+  printArea.style.display = 'block';
+  document.querySelectorAll('body > *:not(#historyPrintArea)').forEach(el => el.style.display = 'none');
+  window.print();
+  setTimeout(() => {
+    printArea.style.display = 'none';
+    document.querySelectorAll('body > *:not(#historyPrintArea)').forEach(el => el.style.display = '');
+  }, 500);
+}
+function deleteHistoryItem(i){
+  const history = getHistorySafe();
+  history.splice(i, 1);
+  localStorage.setItem('brokertally_history', JSON.stringify(history));
+  renderHistory();
+}
+document.getElementById('clearHistoryBtn').onclick = () => {
+  if(confirm('Clear all saved history? This cannot be undone.')){
+    localStorage.removeItem('brokertally_history');
+    renderHistory();
+  }
+};
+renderHistory();
+</script>
+</body>
+</html>
